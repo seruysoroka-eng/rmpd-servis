@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8">
+  <title>RMPD Servis</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    :root{--bg:#fff;--text:#111;--accent:#2563eb}
+    @media (prefers-color: dark){
+      :root{--bg:#111;--text:#f1f5f9}
+    }
+    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica Neue,Arial;background:var(--bg);color:var(--text);line-height:1.55}
+    header{padding:1.2rem 1rem;background:var(--accent);color:#fff;font-size:1.3rem;font-weight:600}
+    main{max-width:760px;margin:auto;padding:1.2rem}
+    input{width:100%;padding:.6rem .8rem;font-size:1rem;border:2px solid #cbd5e1;border-radius:.4rem;margin-bottom:1.2rem}
+    .card{border:1px solid #e2e8f0;border-radius:.5rem;padding:1rem;margin-bottom:.8rem;transition:box-shadow .2s}
+    .card:hover{box-shadow:0 5px 15px rgba(0,0,0,.08)}
+    h3{margin:.2rem 0 .6rem}
+    a{color:var(--accent);text-decoration:none}
+    footer{text-align:center;padding:2rem 1rem;font-size:.85rem;color:#64748b}
+  </style>
+</head>
+<body>
+  <header>RMPD Servis – інструкції для мігрантів</header>
+
+  <main>
+    <input id="search" placeholder="Пошук послуги (укр/eng)…">
+
+    <div id="list">
+      <div class="card" data-key="посвідка residence">
+        <h3>Як отримати посвідку на проживання</h3>
+        <p>Строк розгляду – 15 днів. Потрібні паспорт, фото 3,5×4,5, квитанція про сплату.</p>
+        <a href="https://github.com/YegorK/rmpd-servis/blob/main/docs/posvidka-uk.pdf" target="_blank">Завантажити PDF</a>
+      </div>
+
+      <div class="card" data-key="віза visa work">
+        <h3>Оформлення робочої візи (D-04)</h3>
+        <p>Запис у візовий центр, довідка про несудимість, контракт, 320 $ консульський збір.</p>
+        <a href="https://github.com/YegorK/rmpd-servis/blob/main/docs/visa-d04-uk.pdf" target="_blank">Завантажити PDF</a>
+      </div>
+
+      <div class="card" data-key="продовження extend">
+        <h3>Продовження посвідки на проживання</h3>
+        <p>Подати не пізніше ніж за 15 днів до закінчення. Потрібна нова квитанція + стара копія.</p>
+      </div>
+
+      <div class="card" data-key="реєстрація address">
+        <h3>Зміна місця реєстрації</h3>
+        <p>Повідомити ДМС протягом 30 днів. Форма № 5 + паспорт + довідка про місце проживання.</p>
+      </div>
+
+      <div class="card" data-key="довідка certificate">
+        <h3>Довідка про несудимість</h3>
+        <p>Онлайн-запит через портал ДМС або ЦНАП – 7 днів, 85 грн.</p>
+      </div>
+    </div>
+  </main>
+
+  <footer>© 2024 RMPD Servis – open-source, MIT</footer>
+
+  <script>
+    const s=document.getElementById('search'),l=document.getElementById('list');
+    s.addEventListener('input',()=>{
+      const v=s.value.toLowerCase();
+      [...l.children].forEach(c=>c.style.display=c.dataset.key.includes(v)?'':'none')
+    });
+  </script>
+</body>
+</html>
