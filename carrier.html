@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8">
+  <title>Кабінет перевізника – RMPD Servis</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    :root{--accent:#2563eb;--bg:#fff;--text:#111;--tile:#f3f6fb}
+    @media (prefers-color: dark){
+      :root{--bg:#111;--text:#f1f5f9;--tile:#1e293b}
+    }
+    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica Neue,Arial;background:var(--bg);color:var(--text)}
+    header{display:flex;justify-content:space-between;align-items:center;padding:1rem 1.5rem}
+    .logo{font-size:1.4rem;font-weight:700}
+    .logout{cursor:pointer}
+    main{max-width:760px;margin:auto;padding:1rem}
+    .card{background:var(--tile);border-radius:.5rem;padding:1rem;margin-bottom:1rem}
+    input,select,button{width:100%;padding:.6rem;margin:.3rem 0;font-size:1rem}
+    button{background:var(--accent);color:#fff;border:0;border-radius:.4rem;cursor:pointer}
+    table{width:100%;border-collapse:collapse;margin-top:1rem}
+    th,td{padding:.5rem;text-align:left;border-bottom:1px solid #cbd5e1}
+  </style>
+</head>
+<body>
+  <header>
+    <div class="logo">RMPD Servis – Кабінет перевізника</div>
+    <div class="logout" onclick="logout()">Вийти</div>
+  </header>
+
+  <!-- LOGIN -->
+  <section id="loginPage" class="card">
+    <h3>Увійти</h3>
+    <input id="user" placeholder="Ім’я користувача">
+    <input id="pass" type="password" placeholder="Пароль">
+    <button onclick="login()">Увійти</button>
+  </section>
+
+  <!-- DASHBOARD -->
+  <main id="dash" style="display:none">
+    <section class="card">
+      <h3>Дашборд</h3>
+      <p>Завершені рейси: <strong id="totalTrips">0</strong></p>
+      <p>Баланс: <strong id="balance">0</strong> грн</p>
+    </section>
+
+    <section class="card">
+      <h3>Новий рейс</h3>
+      <input id="date" type="date">
+      <input id="route" placeholder="Маршрут (напр. Київ-Львів)">
+      <input id="pass" type="number" placeholder="К-сть пасажирів" min="1">
+      <input id="cost" type="number" placeholder="Вартість, грн" min="0">
+      <button onclick="addTrip()">Додати рейс</button>
+    </section>
+
+    <section class="card">
+      <h3>Історія рейсів</h3>
+      <table id="tbl">
+        <thead><tr><th>Дата</th><th>Маршрут</th><th>Пасажири</th><th>Сума</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </section>
+  </main>
+
+  <script>
+    const d=document,ls=localStorage;
+    function $(id){return d.getElementById(id)}
+    function show(id,on){$(id).style.display=on?'block':'none'}
+    function login(){
+      const u=$('user').value,p=$('pass').value;
+      if(!u||!p){alert('Заповніть усі поля');return;}
+      ls.setItem('carrierUser',u); ls.setItem('carrierPass',p);
+      show('loginPage',false); show('dash',true); loadData();
+    }
+    function logout(){ls.clear(); location.reload()}
+    function addTrip(){
+      const date=$('date').value, route=$('route').value,
+            pass=Number($('pass').value), cost=Number($('cost').value);
+      if(!date||!route||!pass||!cost){alert('Заповніть усі поля');return;}
+      const trips=JSON.parse(ls.getItem('trips')||'[]');
+      trips.push({date,route,pass,cost});
+      ls.setItem('trips',JSON.stringify(trips));
+      loadData();
+      // clear form
+      $('date').value=''; $('route').value=''; $('pass').value=''; $('cost').value='';
+    }
+    function loadData(){
+      const trips=JSON.parse(ls.getItem('trips')||'[]');
+      $('totalTrips').textContent=trips.length;
+      $('balance').textContent=trips.reduce((s,t)=>s+t.cost,0);
+      const tbody=$('tbl').tBodies[0]; tbody.innerHTML='';
+      trips.forEach(t=>{
+        const r=tbody.insertRow();
+        r.insertCell(0).textContent=t.date;
+        r.insertCell(1).textContent=t.route;
+        r.insertCell(2).textContent=t.pass;
+        r.insertCell(3).textContent=t.cost+' грн';
+      });
+    }
+    // on load
+    if(ls.getItem('carrierUser')){show('loginPage',false); show('dash',true); loadData();}
+  </script>
+</body>
+</html>
