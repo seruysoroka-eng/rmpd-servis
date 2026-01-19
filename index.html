@@ -23,25 +23,6 @@
     footer{margin-top:auto;padding-top:2rem;font-size:.75rem;color:#64748b}
   </style>
 </head>
-  <script>
-// 1. Підтягуємо з URL-параметрів ?rmpd=...&auto=...&tracker=...
-const params = new URLSearchParams(location.search);
-const rmpd   = params.get('rmpd');
-const auto   = params.get('auto');
-const tracker= params.get('tracker');
-// 2. Якщо немає URL – беремо з localStorage (останній успішний)
-if(rmpd)   localStorage.setItem('rmpd',rmpd);
-if(auto)   localStorage.setItem('auto',auto);
-if(tracker)localStorage.setItem('tracker',tracker);
-// 3. Заповнюємо поля + автоматично перевіряємо
-document.getElementById('rmpd').value   = localStorage.getItem('rmpd')   || '';
-document.getElementById('auto').value   = localStorage.getItem('auto')   || '';
-document.getElementById('tracker').value= localStorage.getItem('tracker')|| '';
-// якщо всі 3 заповнені – одразу перевіряємо
-if(document.getElementById('rmpd').value && document.getElementById('auto').value && document.getElementById('tracker').value){
-  checkStatus();
-}
-</script>
 <body>
   <header>
     <div class="logo">RMPD Servis</div>
@@ -91,5 +72,50 @@ if(document.getElementById('rmpd').value && document.getElementById('auto').valu
       const img=document.querySelector('#screen img'); if(img) img.src=d.screen;
     }).catch(()=>{}); },20*60*1000);
   </script>
+   <script>
+// 1. Підтягуємо з URL-параметрів ?rmpd=...&auto=...&tracker=...
+const params = new URLSearchParams(location.search);
+const rmpd   = params.get('rmpd');
+const auto   = params.get('auto');
+const tracker= params.get('tracker');
+// 2. Якщо немає URL – беремо з localStorage (останній успішний)
+if(rmpd)   localStorage.setItem('rmpd',rmpd);
+if(auto)   localStorage.setItem('auto',auto);
+if(tracker)localStorage.setItem('tracker',tracker);
+// 3. Заповнюємо поля + автоматично перевіряємо
+document.getElementById('rmpd').value   = localStorage.getItem('rmpd')   || '';
+document.getElementById('auto').value   = localStorage.getItem('auto')   || '';
+document.getElementById('tracker').value= localStorage.getItem('tracker')|| '';
+// якщо всі 3 заповнені – одразу перевіряємо
+if(document.getElementById('rmpd').value && document.getElementById('auto').value && document.getElementById('tracker').value){
+  checkStatus();
+}
+</script>
+  <script>
+// 1. Заповнюємо поля з localStorage при завантаженні
+document.getElementById('rmpd').value   = localStorage.getItem('rmpd')   || '';
+document.getElementById('auto').value   = localStorage.getItem('auto')   || '';
+document.getElementById('tracker').value= localStorage.getItem('tracker')|| '';
+
+// 2. Після натискання «Перевірити» – зберігаємо + перевіряємо
+const originalCheck = checkStatus; // зберігаємо оригінальну функцію
+checkStatus = function () {
+  // зберігаємо введені значення
+  localStorage.setItem('rmpd',   document.getElementById('rmpd').value.trim());
+  localStorage.setItem('auto',   document.getElementById('auto').value.trim());
+  localStorage.setItem('tracker',document.getElementById('tracker').value.trim());
+  // викликаємо оригінальну перевірку
+  originalCheck();
+};
+
+// 3. Якщо всі 3 поля заповнені – одразу перевіряємо (не тисни «Перевірити»)
+window.addEventListener('load', () => {
+  if (document.getElementById('rmpd').value &&
+      document.getElementById('auto').value &&
+      document.getElementById('tracker').value) {
+    checkStatus();
+  }
+});
+</script>
 </body>
 </html>
