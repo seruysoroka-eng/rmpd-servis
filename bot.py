@@ -30,25 +30,24 @@ def crop_center(img_bytes, save_path):
     img.crop(box).save(save_path, quality=85)
 
 def parse_one_number(rmpd: str, auto: str, tracker: str):
-    """вводимо 3 поля і парсимо відповідь"""
     driver.get(URL)
-    # 1. номер заявки
-    inp1 = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.CSS_SELECTOR, "input[name='numerWniosku']")))
+    # чекаємо появи полів (макс 10 с)
+    inp1 = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.XPATH, "//input[@name='numerWniosku']")))
+    inp2 = driver.find_element(By.XPATH, "//input[@name='numerRejestracyjny']")
+    inp3 = driver.find_element(By.XPATH, "//input[@name='sentId']")
+    # очищаємо і вводимо
     inp1.clear(); inp1.send_keys(rmpd)
-    # 2. номер авто
-    inp2 = driver.find_element(By.CSS_SELECTOR, "input[name='numerRejestracyjny']")
     inp2.clear(); inp2.send_keys(auto)
-    # 3. номер трекера
-    inp3 = driver.find_element(By.CSS_SELECTOR, "input[name='sentId']")
     inp3.clear(); inp3.send_keys(tracker)
-    # натискаємо Szukaj
-    btn = driver.find_element(By.XPATH, "//button[text()='Szukaj']")
+    # натискаємо «Szukaj» (чекаємо, поки кнопка стане клікабельною)
+    btn = WebDriverWait(driver, 10).until(EC.element_to_be_clickable((By.XPATH, "//button[text()='Szukaj']")))
     btn.click()
-    time.sleep(5)  # чекаємо таблицю
+    # чекаємо результат (макс 10 с)
+    time.sleep(5)  # можна замінити на WebDriverWait за table/tr
     png = driver.get_screenshot_as_png()
     key = f"{rmpd}_{auto}_{tracker}".replace("/", "_").replace(" ", "_")
     crop_center(BytesIO(png), f"{HISTORY_DIR}/{key}.jpg")
-    # парсинг статусу
+    # парсимо
     if b"Zrealizowano" in png:   status = "✅ Zrealizowano"
     elif b"Odmowa" in png:       status = "❌ Odmowa"
     else:                        status = "⏳ In progress"
@@ -59,7 +58,6 @@ def parse_one_number(rmpd: str, auto: str, tracker: str):
     with open(hist_file, "w") as f:
         json.dump(hist, f, indent=2)
     return status, f"{HISTORY_DIR}/{key}.jpg"
-
 def send_telegram(text, photo_path=None):
     bot = telegram.Bot(TELE_TOKEN)
     if photo_path:
