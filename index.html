@@ -12,64 +12,64 @@
     body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica Neue,Arial;background:var(--bg);color:var(--text);display:flex;flex-direction:column;align-items:center;padding:2rem 1rem;min-height:100vh}
     header{margin-bottom:2rem;text-align:center}
     .logo{font-size:1.8rem;font-weight:700;color:var(--accent)}
-    .sub{text-align:center;font-size:1rem;color:#64748b;margin:.5rem 0 2rem}
+    nav{margin-top:.5rem} nav a{color:var(--accent);margin:0 .5rem;text-decoration:none}
     .card{width:100%;max-width:640px;background:var(--tile);border-radius:12px;box-shadow:var(--shadow);padding:1.5rem}
     input{width:100%;padding:.9rem 1.2rem;font-size:1rem;border:2px solid #e2e8f0;border-radius:8px;margin-bottom:1.2rem}
     input:focus{outline:none;border-color:var(--accent)}
+    button{width:100%;padding:.9rem;font-size:1rem;background:var(--accent);color:#fff;border:0;border-radius:8px;cursor:pointer}
     #status{font-size:1.3rem;margin-bottom:1rem}
     #screen img{width:100%;border-radius:8px}
     .info{font-size:.85rem;color:#64748b;text-align:center;margin-top:1rem}
     footer{margin-top:auto;padding-top:2rem;font-size:.75rem;color:#64748b}
   </style>
 </head>
-  <header>
-  <div class="logo">RMPD Servis</div>
-  <nav>
-    <a href="carrier.html">Кабінет перевізника</a>
-    <a href="https://t.me/YOUR_BOT_NAME?start=track" target="_blank">Telegram /track</a>
-  </nav>
-</header>
 <body>
   <header>
     <div class="logo">RMPD Servis</div>
-    <div class="sub">Моніторинг статусу вантажу RMPD-406 (SENT)</div>
+    <nav><a href="carrier.html">Кабінет перевізника</a> <a href="https://t.me/YOUR_BOT_NAME?start=track" target="_blank">Telegram /track</a></nav>
   </header>
 
   <main class="card">
-    <input id="rmpd" placeholder="Введіть номер заявки RMPD (напр. 406/2025/12345)">
-    <button id="check" onclick="checkStatus()">Перевірити</button>
+    <h3>Моніторинг RMPD-406 (SENT)</h3>
+    <input id="rmpd"   placeholder="Номер заявки RMPD (406/2025/12345)">
+    <input id="auto"   placeholder="Номер авто (AB123456 або UA123456)">
+    <input id="tracker"placeholder="Номер трекера SENT (123456789)">
+    <button onclick="checkStatus()">Перевірити</button>
 
     <div id="result" style="display:none">
       <div id="status"></div>
       <div id="screen"></div>
+      <div id="history"></div>
     </div>
   </main>
 
   <footer>Оновлення кожні 20 хв • Джерело: puesc.gov.pl</footer>
 
   <script>
-    // при натисканні «Перевірити» беремо номер і показуємо ОСТАННІЙ загальний скрін
     function checkStatus(){
-      const nr = document.getElementById('rmpd').value.trim();
-      if(!nr){ alert('Введіть номер заявки'); return; }
-      // показуємо останній загальний статус (без глибокого парсингу – поки що)
-      fetch('status.json?t='+Date.now())
+      const rmpd   = document.getElementById('rmpd').value.trim();
+      const auto   = document.getElementById('auto').value.trim();
+      const tracker= document.getElementById('tracker').value.trim();
+      if(!rmpd||!auto||!tracker){ alert('Заповніть усі поля'); return; }
+      const key = `${rmpd}_${auto}_${tracker}`.replace(/[/\s]/g,'_');
+      fetch(`history/${key}.json?t=`+Date.now())
         .then(r=>r.json())
-        .then(d=>{
-          document.getElementById('status').innerText = d.status;
+        .then(arr=>{
+          const last = arr[arr.length-1];
+          document.getElementById('status').innerText = last.status;
           const img = document.createElement('img');
-          img.src = d.screen;
-          document.getElementById('screen').innerHTML = '';
-          document.getElementById('screen').appendChild(img);
+          img.src = `history/${key}.jpg?t=`+Date.now();
+          document.getElementById('screen').innerHTML=''; document.getElementById('screen').appendChild(img);
+          let h = '<h4>Історія</h4><ul>';
+          arr.slice(-5).reverse().forEach(i=>{ h+=`<li>${new Date(i.ts*1000).toLocaleString()} – ${i.status}</li>`; });
+          h+='</ul>'; document.getElementById('history').innerHTML = h;
           document.getElementById('result').style.display = 'block';
         })
-        .catch(e=>{ alert('Не вдалося завантажити дані'); console.error(e); });
+        .catch(e=>{ alert('Ще немає даних – бот оновить за мить.'); console.error(e); });
     }
-    // автоматичне оновлення кожні 20 хв
     setInterval(()=>{ fetch('status.json?t='+Date.now()).then(r=>r.json()).then(d=>{
-      document.getElementById('status') && (document.getElementById('status').innerText = d.status);
-      const img = document.querySelector('#screen img');
-      if(img) img.src = d.screen;
+      document.getElementById('status')&&(document.getElementById('status').innerText=d.status);
+      const img=document.querySelector('#screen img'); if(img) img.src=d.screen;
     }).catch(()=>{}); },20*60*1000);
   </script>
 </body>
