@@ -23,6 +23,25 @@
     footer{margin-top:auto;padding-top:2rem;font-size:.75rem;color:#64748b}
   </style>
 </head>
+  <script>
+// 1. Підтягуємо з URL-параметрів ?rmpd=...&auto=...&tracker=...
+const params = new URLSearchParams(location.search);
+const rmpd   = params.get('rmpd');
+const auto   = params.get('auto');
+const tracker= params.get('tracker');
+// 2. Якщо немає URL – беремо з localStorage (останній успішний)
+if(rmpd)   localStorage.setItem('rmpd',rmpd);
+if(auto)   localStorage.setItem('auto',auto);
+if(tracker)localStorage.setItem('tracker',tracker);
+// 3. Заповнюємо поля + автоматично перевіряємо
+document.getElementById('rmpd').value   = localStorage.getItem('rmpd')   || '';
+document.getElementById('auto').value   = localStorage.getItem('auto')   || '';
+document.getElementById('tracker').value= localStorage.getItem('tracker')|| '';
+// якщо всі 3 заповнені – одразу перевіряємо
+if(document.getElementById('rmpd').value && document.getElementById('auto').value && document.getElementById('tracker').value){
+  checkStatus();
+}
+</script>
 <body>
   <header>
     <div class="logo">RMPD Servis</div>
