@@ -2,68 +2,68 @@
 <html lang="uk">
 <head>
   <meta charset="UTF-8">
-  <title>RMPD Servis</title>
+  <title>RMPD Servis – Моніторинг 406</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <style>
-    :root{--bg:#fff;--text:#111;--accent:#2563eb}
+    :root{--accent:#005bbb;--bg:#f8fafc;--text:#111;--tile:#fff;--shadow:0 2px 8px rgba(0,0,0,.08)}
     @media (prefers-color: dark){
-      :root{--bg:#111;--text:#f1f5f9}
+      :root{--bg:#0f172a;--text:#f1f5f9;--tile:#1e293b}
     }
-    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica Neue,Arial;background:var(--bg);color:var(--text);line-height:1.55;}
-header{padding:1.2rem 1rem;background:var(--accent);color:#fff;font-size:1.3rem;font-weight:600;}
-main{max-width:760px;margin:auto;padding:1.2rem;}
-input{width:100%;padding:.6rem .8rem;font-size:1rem;border:2px solid #cbd5e1;border-radius:.4rem;margin-bottom:1.2rem;}
-.card{border:1px solid #e2e8f0;border-radius:.5rem;padding:1rem;margin-bottom:.8rem;transition:box-shadow .2s;}
-.card:hover{box-shadow:0 5px 15px rgba(0,0,0,.08);}
-h3{margin:.2rem 0 .6rem;}
-a{color:var(--accent);text-decoration:none;}
-footer{text-align:center;padding:2rem 1rem;font-size:.85rem;color:#64748b;}
+    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica Neue,Arial;background:var(--bg);color:var(--text);display:flex;flex-direction:column;align-items:center;padding:2rem 1rem;min-height:100vh}
+    header{margin-bottom:2rem;text-align:center}
+    .logo{font-size:1.8rem;font-weight:700;color:var(--accent)}
+    .sub{text-align:center;font-size:1rem;color:#64748b;margin:.5rem 0 2rem}
+    .card{width:100%;max-width:640px;background:var(--tile);border-radius:12px;box-shadow:var(--shadow);padding:1.5rem}
+    input{width:100%;padding:.9rem 1.2rem;font-size:1rem;border:2px solid #e2e8f0;border-radius:8px;margin-bottom:1.2rem}
+    input:focus{outline:none;border-color:var(--accent)}
+    #status{font-size:1.3rem;margin-bottom:1rem}
+    #screen img{width:100%;border-radius:8px}
+    .info{font-size:.85rem;color:#64748b;text-align:center;margin-top:1rem}
+    footer{margin-top:auto;padding-top:2rem;font-size:.75rem;color:#64748b}
   </style>
 </head>
 <body>
-  <header>RMPD Servis – інструкції для мігрантів</header>
+  <header>
+    <div class="logo">RMPD Servis</div>
+    <div class="sub">Моніторинг статусу вантажу RMPD-406 (SENT)</div>
+  </header>
 
-  <main>
-    <input id="search" placeholder="Пошук послуги (укр/eng)…">
+  <main class="card">
+    <input id="rmpd" placeholder="Введіть номер заявки RMPD (напр. 406/2025/12345)">
+    <button id="check" onclick="checkStatus()">Перевірити</button>
 
-    <div id="list">
-      <div class="card" data-key="посвідка residence">
-        <h3>Як отримати посвідку на проживання</h3>
-        <p>Строк розгляду – 15 днів. Потрібні паспорт, фото 3,5×4,5, квитанція про сплату.</p>
-        <a href="https://github.com/YegorK/rmpd-servis/blob/main/docs/posvidka-uk.pdf" target="_blank">Завантажити PDF</a>
-      </div>
-
-      <div class="card" data-key="віза visa work">
-        <h3>Оформлення робочої візи (D-04)</h3>
-        <p>Запис у візовий центр, довідка про несудимість, контракт, 320 $ консульський збір.</p>
-        <a href="https://github.com/YegorK/rmpd-servis/blob/main/docs/visa-d04-uk.pdf" target="_blank">Завантажити PDF</a>
-      </div>
-
-      <div class="card" data-key="продовження extend">
-        <h3>Продовження посвідки на проживання</h3>
-        <p>Подати не пізніше ніж за 15 днів до закінчення. Потрібна нова квитанція + стара копія.</p>
-      </div>
-
-      <div class="card" data-key="реєстрація address">
-        <h3>Зміна місця реєстрації</h3>
-        <p>Повідомити ДМС протягом 30 днів. Форма № 5 + паспорт + довідка про місце проживання.</p>
-      </div>
-
-      <div class="card" data-key="довідка certificate">
-        <h3>Довідка про несудимість</h3>
-        <p>Онлайн-запит через портал ДМС або ЦНАП – 7 днів, 85 грн.</p>
-      </div>
+    <div id="result" style="display:none">
+      <div id="status"></div>
+      <div id="screen"></div>
     </div>
   </main>
 
-  <footer>© 2024 RMPD Servis – open-source, MIT</footer>
+  <footer>Оновлення кожні 20 хв • Джерело: puesc.gov.pl</footer>
 
   <script>
-    const s=document.getElementById('search'),l=document.getElementById('list');
-    s.addEventListener('input',()=>{
-      const v=s.value.toLowerCase();
-      [...l.children].forEach(c=>c.style.display=c.dataset.key.includes(v)?'':'none')
-    });
+    // при натисканні «Перевірити» беремо номер і показуємо ОСТАННІЙ загальний скрін
+    function checkStatus(){
+      const nr = document.getElementById('rmpd').value.trim();
+      if(!nr){ alert('Введіть номер заявки'); return; }
+      // показуємо останній загальний статус (без глибокого парсингу – поки що)
+      fetch('status.json?t='+Date.now())
+        .then(r=>r.json())
+        .then(d=>{
+          document.getElementById('status').innerText = d.status;
+          const img = document.createElement('img');
+          img.src = d.screen;
+          document.getElementById('screen').innerHTML = '';
+          document.getElementById('screen').appendChild(img);
+          document.getElementById('result').style.display = 'block';
+        })
+        .catch(e=>{ alert('Не вдалося завантажити дані'); console.error(e); });
+    }
+    // автоматичне оновлення кожні 20 хв
+    setInterval(()=>{ fetch('status.json?t='+Date.now()).then(r=>r.json()).then(d=>{
+      document.getElementById('status') && (document.getElementById('status').innerText = d.status);
+      const img = document.querySelector('#screen img');
+      if(img) img.src = d.screen;
+    }).catch(()=>{}); },20*60*1000);
   </script>
 </body>
 </html>
