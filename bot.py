@@ -30,34 +30,35 @@ def crop_center(img_bytes, save_path):
     img.crop(box).save(save_path, quality=85)
 
 def parse_one_number(rmpd: str, auto: str, tracker: str):
-    driver.get(URL)
-    # чекаємо появи полів (макс 10 с)
+    # 1. ПЕРЕХОДИМО на сторінку моніторинга
+    driver.get("https://puesc.gov.pl/web/guest/uslugi/przewoz-towarow-objety-monitorowaniem/rmpd-406?systemName=SENT&formName=1000972")
+    # 2. Чекаємо полів (точні XPATH)
     inp1 = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.XPATH, "//input[@name='numerWniosku']")))
     inp2 = driver.find_element(By.XPATH, "//input[@name='numerRejestracyjny']")
     inp3 = driver.find_element(By.XPATH, "//input[@name='sentId']")
-    # очищаємо і вводимо
+    # 3. Вводимо 3 значення
     inp1.clear(); inp1.send_keys(rmpd)
     inp2.clear(); inp2.send_keys(auto)
     inp3.clear(); inp3.send_keys(tracker)
-    # натискаємо «Szukaj» (чекаємо, поки кнопка стане клікабельною)
+    # 4. Натискаємо «Szukaj»
     btn = WebDriverWait(driver, 10).until(EC.element_to_be_clickable((By.XPATH, "//button[text()='Szukaj']")))
     btn.click()
-    # чекаємо результат (макс 10 с)
-    time.sleep(5)  # можна замінити на WebDriverWait за table/tr
+    # 5. Чекаємо результат (5 сек)
+    time.sleep(5)
     png = driver.get_screenshot_as_png()
     key = f"{rmpd}_{auto}_{tracker}".replace("/", "_").replace(" ", "_")
-    crop_center(BytesIO(png), f"{HISTORY_DIR}/{key}.jpg")
-    # парсимо
+    crop_center(BytesIO(png), f"history/{key}.jpg")
+    # 6. Парсимо статус
     if b"Zrealizowano" in png:   status = "✅ Zrealizowano"
     elif b"Odmowa" in png:       status = "❌ Odmowa"
     else:                        status = "⏳ In progress"
-    # історія
-    hist_file = f"{HISTORY_DIR}/{key}.json"
+    # 7. Історія
+    hist_file = f"history/{key}.json"
     hist = [] if not os.path.exists(hist_file) else json.load(open(hist_file))
     hist.append({"ts": int(time.time()), "status": status})
     with open(hist_file, "w") as f:
         json.dump(hist, f, indent=2)
-    return status, f"{HISTORY_DIR}/{key}.jpg"
+    return status, f"history/{key}.jpg"
 def send_telegram(text, photo_path=None):
     bot = telegram.Bot(TELE_TOKEN)
     if photo_path:
